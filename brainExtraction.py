@@ -1,6 +1,6 @@
 import cv2
 
-
+# utiltiy function to check whether given two rectangles overlap with each other 
 def is_overlapping(rect1, rect2):
     dx = min(rect1[2], rect2[2]) - max(rect1[0], rect2[0])
     dy = min(rect1[3], rect2[3]) - max(rect1[1], rect2[1])
