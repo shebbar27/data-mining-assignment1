@@ -1,9 +1,17 @@
 import cv2
 
-valid_slice_coordinates = []
+
+def is_overlapping(rect1, rect2):
+    dx = min(rect1[2], rect2[2]) - max(rect1[0], rect2[0])
+    dy = min(rect1[3], rect2[3]) - max(rect1[1], rect2[1])
+
+    if dx > 0 and dy > 0:
+        return True
+    return False
+
 
 # verifify whether the boundary coordinates are valid and add them valid boundary coordinates
-def validate_coordinates(x, y, w, h):
+def validate_coordinates(x, y, w, h, valid_slice_coordinates, invalid_slice_coordinates, offset_pixels):
     # reject if width or height is less than 10 pixels
     if w < 10 or h < 10:
         return
@@ -13,57 +21,21 @@ def validate_coordinates(x, y, w, h):
         return
     
     # assume first boundary coordinates as valid
-    if valid_slice_coordinates.count == 0:
-        valid_slice_coordinates.append((x, y, w, h))
+    if len(valid_slice_coordinates) == 0:
+        valid_slice_coordinates.add((x, y, w, h))
         return
 
+    is_valid = True
     # for each existing valid boundary coordinates check for overlap with new coordinates
-    overlapped = False
-    for coordinates in valid_slice_coordinates:
-        x1 = coordinates[0]
-        y1 = coordinates[1]
-        x2 = coordinates[0] + coordinates[2]
-        y2 = coordinates[1] + coordinates[3]
-
-        # if there is an ovelap keep the larger boundary coordinates
-        if x >= x1 and x <= x2 and y >= y1 and y <= y2:
-            # print(f"overlapping found: {x1}, {y1}, {coordinates[2]}, {coordinates[3]}")
-            if w * h > coordinates[2] * coordinates[3]:
-                valid_slice_coordinates.remove(coordinates)
-                # print(f"removed coordinates: {x1}, {y1}, {coordinates[2]}, {coordinates[3]}")
-                break
+    for x1, y1, w1, h1 in valid_slice_coordinates:
+        if is_overlapping([x - offset_pixels, y - offset_pixels, x + w + offset_pixels, y + h + offset_pixels], [x1, y1, x1 + w1, y1 + h1]):
+            if w * h > w1 * h1:
+                invalid_slice_coordinates.add((x1, y1, w1, h1))
             else:
-                overlapped = True
-        
-        if x + w >= x1 and x + w <= x2 and y + h >= y1 and y + h <= y2:
-            # print(f"overlapping found: {x1}, {y1}, {coordinates[2]}, {coordinates[3]}")
-            if w * h > coordinates[2] * coordinates[3]:
-                valid_slice_coordinates.remove(coordinates)
-                # print(f"removed coordinates: {x1}, {y1}, {coordinates[2]}, {coordinates[3]}")
-                break
-            else:
-                overlapped = True
-        
-        if x1 >= x and x1 <= x + w and y1 >= y and y1 <= y + h:
-            # print(f"overlapping found: {x1}, {y1}, {coordinates[2]}, {coordinates[3]}")
-            if w * h > coordinates[2] * coordinates[3]:
-                valid_slice_coordinates.remove(coordinates)
-                # print(f"removed coordinates: {x1}, {y1}, {coordinates[2]}, {coordinates[3]}")
-                break
-            else:
-                overlapped = True
-
-        if x2 >= x and x2 <= x + w and y2 >= y and y2 <= y + h:
-            # print(f"overlapping found: {x1}, {y1}, {coordinates[2]}, {coordinates[3]}")
-            if w * h > coordinates[2] * coordinates[3]:
-                valid_slice_coordinates.remove(coordinates)
-                # print(f"removed coordinates: {x1}, {y1}, {coordinates[2]}, {coordinates[3]}")
-                break
-            else:
-                overlapped = True
-            
-    if not overlapped:
-        valid_slice_coordinates.append((x, y, w, h))
+                is_valid = False
+                    
+    if is_valid:
+        valid_slice_coordinates.add((x, y, w, h))
 
 
 # function to slice input fMRI image containing multipe brain images into individual images
@@ -73,23 +45,24 @@ def slice_brain_image(brain_image):
     OFFSET_PIXELS = 15
 
     brain_images = []
+    valid_slice_coordinates = set()
+    invalid_slice_coordinates = set()
     gray_image = cv2.cvtColor(brain_image, cv2.COLOR_BGR2GRAY)
     _, binary_image = cv2.threshold(gray_image, BINARY_THRESHOLD, MAX_PIXEL_VALUE, cv2.THRESH_BINARY_INV)
     contours, _ = cv2.findContours(binary_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         x,y,w,h = cv2.boundingRect(contour)
-        validate_coordinates(x, y, w, h)
-            
-    for coordinates in valid_slice_coordinates:
-        x = coordinates[0]
-        y = coordinates[1]
-        w = coordinates[2]
-        h = coordinates[3]
-        cv2.rectangle(brain_image, (x, y), (x + w, y + h), (0, 0, 255), 1)
+        validate_coordinates(x, y, w, h, valid_slice_coordinates, invalid_slice_coordinates, OFFSET_PIXELS)
+
+    for coordinate in invalid_slice_coordinates:
+        valid_slice_coordinates.discard(coordinate)
+
+    for x, y, w, h in valid_slice_coordinates:
+        # cv2.rectangle(brain_image, (x - OFFSET_PIXELS, y - OFFSET_PIXELS), (x + w + OFFSET_PIXELS, y + h + OFFSET_PIXELS), (0, 0, 255), 1)
         slice = brain_image.copy()[y - OFFSET_PIXELS : y + h + OFFSET_PIXELS, x - OFFSET_PIXELS :  x + w + OFFSET_PIXELS]
         brain_images.append(slice)
 
-    brain_images.append(brain_image)
+    # brain_images.append(brain_image)
     return brain_images
 
 
