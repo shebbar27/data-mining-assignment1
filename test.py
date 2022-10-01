@@ -8,6 +8,8 @@ INPUT_DIR = 'testPatient/'
 SLICES_OUTPUT_DIR = 'Slices/'
 BOUNDARIES_OUTPUT_DIR = 'Boundaries/'
 IMAGE_EXTENSION = '.png'
+BOUNDARY_COLOR = (0, 0, 255)
+BOUNDARY_THICKNESS = 1
 
 
 # utility function to remove file extension form file name
@@ -68,7 +70,7 @@ def main():
         os.makedirs(sub_directory, exist_ok = True)
         for file_name in os.listdir(source_path):
             brain_image = cv2.imread(join_path(source_path, file_name))
-            boundary_image = brainExtraction.draw_brain_boundary(brain_image)
+            boundary_image = brainExtraction.draw_brain_boundary(brain_image, BOUNDARY_COLOR, BOUNDARY_THICKNESS)
             cv2.imwrite(join_path(sub_directory, file_name), boundary_image)
 
 if __name__ == '__main__':
