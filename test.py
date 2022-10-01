@@ -7,6 +7,7 @@ import shutil
 INPUT_DIR = 'testPatient/'
 SLICES_OUTPUT_DIR = 'Slices/'
 BOUNDARIES_OUTPUT_DIR = 'Boundaries/'
+IMAGE_FILE_SUFFIX = '_thresh.png'
 IMAGE_EXTENSION = '.png'
 BOUNDARY_COLOR = (0, 0, 255)
 BOUNDARY_THICKNESS = 1
@@ -33,7 +34,7 @@ def init_output_dirs(folder):
 def read_input_data():
     images = []
     for file_name in os.listdir(INPUT_DIR):
-        if(file_name.endswith("_thresh.png")):
+        if(file_name.endswith(IMAGE_FILE_SUFFIX)):
             brain_image = cv2.imread(join_path(INPUT_DIR, file_name))
             images.append((file_name, brain_image))
     return images

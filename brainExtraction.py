@@ -12,12 +12,14 @@ def is_overlapping(rect1, rect2):
 
 # verifify whether the boundary coordinates are valid and add them valid boundary coordinates
 def validate_coordinates(x, y, w, h, valid_slice_coordinates, invalid_slice_coordinates, offset_pixels):
+    MIN_DIMENSION = 10
+    MAX_DIMENSION = 200
     # reject if width or height is less than 10 pixels
-    if w < 10 or h < 10:
+    if w < MIN_DIMENSION or h < MIN_DIMENSION:
         return
     
     # reject if width or height is greater than 200 pixels
-    if w > 200 or h > 200:
+    if w > MAX_DIMENSION or h > MAX_DIMENSION:
         return
     
     # assume first boundary coordinates as valid
@@ -48,8 +50,8 @@ def slice_brain_image(brain_image):
     valid_slice_coordinates = set()
     invalid_slice_coordinates = set()
     gray_image = cv2.cvtColor(brain_image, cv2.COLOR_BGR2GRAY)
-    _, binary_image = cv2.threshold(gray_image, BINARY_THRESHOLD, MAX_PIXEL_VALUE, cv2.THRESH_BINARY_INV)
-    contours, _ = cv2.findContours(binary_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    _, binary_image = cv2.threshold(gray_image, BINARY_THRESHOLD, MAX_PIXEL_VALUE, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         x,y,w,h = cv2.boundingRect(contour)
         validate_coordinates(x, y, w, h, valid_slice_coordinates, invalid_slice_coordinates, OFFSET_PIXELS)
@@ -73,7 +75,7 @@ def draw_brain_boundary(brain_image, boundary_color, boundary_thickness):
     CONTOUR_INDEX = -1
 
     gray_image = cv2.cvtColor(brain_image, cv2.COLOR_BGR2GRAY)
-    _, binary_image = cv2.threshold(gray_image, BINARY_THRESHOLD, MAX_PIXEL_VALUE, cv2.THRESH_BINARY_INV)
-    contours, _ = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, binary_image = cv2.threshold(gray_image, BINARY_THRESHOLD, MAX_PIXEL_VALUE, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     brain_boundary_image = cv2.drawContours(brain_image, contours, CONTOUR_INDEX, boundary_color, boundary_thickness)
     return brain_boundary_image
