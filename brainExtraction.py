@@ -13,7 +13,7 @@ def is_overlapping(rect1, rect2):
 # verifify whether the boundary coordinates are valid and add them valid boundary coordinates
 def validate_coordinates(x, y, w, h, valid_slice_coordinates, invalid_slice_coordinates, offset_pixels):
     MIN_DIMENSION = 10
-    MAX_DIMENSION = 200
+    MAX_DIMENSION = 250
     # reject if width or height is less than 10 pixels
     if w < MIN_DIMENSION or h < MIN_DIMENSION:
         return

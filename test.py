@@ -7,7 +7,7 @@ import shutil
 INPUT_DIR = 'testPatient/'
 SLICES_OUTPUT_DIR = 'Slices/'
 BOUNDARIES_OUTPUT_DIR = 'Boundaries/'
-IMAGE_FILE_SUFFIX = '_thresh.png'
+IMAGE_FILE_SUFFIX = 'thresh.png'
 IMAGE_EXTENSION = '.png'
 BOUNDARY_COLOR = (0, 0, 255)
 BOUNDARY_THICKNESS = 1
